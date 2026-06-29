@@ -1,15 +1,12 @@
 import { useState } from 'react'
-import type { Todo } from '../App'; // App.tsxからTodoの型をインポート
- // App.tsxからTodoの型をインポート
+import type { Todo } from '../App'; 
 
-// Propsの型を定義
 interface ShowTodoProps {
   todos: Todo[];
   handleUpdate: (index: number) => void;
   handleDelete: (index: number) => void;
 }
 
-// フィルターの状態を型付け（リテラル型）
 type FilterType = 'all' | 'waiting' | 'done';
 
 export const ShowTodo = (props: ShowTodoProps) => {

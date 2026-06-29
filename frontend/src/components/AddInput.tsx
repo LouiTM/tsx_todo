@@ -1,6 +1,5 @@
 import React from 'react';
 
-// Propsの型を定義
 interface AddInputProps {
   title: string;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;

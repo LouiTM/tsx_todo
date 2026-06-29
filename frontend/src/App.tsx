@@ -6,12 +6,12 @@ import { AddInput } from './components/AddInput'
 export type TodoStatus = 'waiting' | 'done' | 'in process';
 
 export interface Todo {
+  id?: number; 
   title: string;
   status: TodoStatus;
   deleting?: boolean;
 }
 
-// Toastの型定義
 interface ToastInfo {
   message: string;
   type: 'success' | 'error';
@@ -31,7 +31,18 @@ function App() {
     setTitle(e.target.value);
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const fetchTodos = () => {
+    fetch('/todos')
+      .then(response => response.json())
+      .then(data => setTodos(data))
+      .catch(err => showToast('データの取得に失敗しました'));
+  }
+
+  useEffect(() => {
+    fetchTodos();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const trimmed = title.trim()
 
@@ -55,39 +66,66 @@ function App() {
       return
     }
 
-    setTodos([...todos, { title: trimmed, status: 'waiting' }])
-    setTitle('')
+    const newTodo = { title: trimmed, status: 'waiting' };
+
+    try {
+      await fetch('/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTodo)
+      });
+      setTitle('');
+      fetchTodos();
+    } catch (err) {
+      showToast('タスクの追加に失敗しました');
+    }
   }
 
-  const handleDelete = (index: number) => {
-    if (todos[index].status === 'waiting') {
+  const handleDelete = async (index: number) => {
+    const targetTodo = todos[index];
+    if (targetTodo.status === 'waiting') {
       showToast('未完了のタスクは削除できません。')
       return
     }
 
-    const targetTitle = todos[index].title
-
-    setTodos(prev => prev.map(todo =>
-      todo.title === targetTitle ? { ...todo, deleting: true } : todo
-    ))
-
-    setTimeout(() => {
-      setTodos(prev => prev.filter(todo => todo.title !== targetTitle))
-      showToast('タスクを削除しました。', 'success')
-    }, 300)
+    try {
+      if (targetTodo.id) {
+        await fetch(`/todos/${targetTodo.id}`, { method: 'DELETE' });
+      }
+      
+      setTodos(prev => prev.map(todo =>
+        todo.title === targetTodo.title ? { ...todo, deleting: true } : todo
+      ))
+      setTimeout(() => {
+        fetchTodos();
+        showToast('タスクを削除しました。', 'success')
+      }, 300)
+    } catch (err) {
+      showToast('タスクの削除に失敗しました');
+    }
   }
 
-  const handleUpdate = (index: number) => {
-    setTodos(todos.map((todo, i) =>
-      i === index ? { ...todo, status: todo.status === 'done' ? 'waiting' : 'done' } : todo
-    ))
+  const handleUpdate = async (index: number) => {
+    const targetTodo = todos[index];
+    const updatedStatus = targetTodo.status === 'done' ? 'waiting' : 'done';
+    
+    try {
+      if (targetTodo.id) {
+        await fetch(`/todos/${targetTodo.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: targetTodo.title,
+            status: updatedStatus
+          })
+        });
+      }
+      fetchTodos();
+    } catch (err) {
+      showToast('タスクの更新に失敗しました');
+    }
   }
 
-  useEffect(() => {
-    fetch('/api/hello')
-            .then(response => response.json())
-            .then(data => setTodos(data))
-  }, []);
 
   useEffect(() => {
     if (toast) {
