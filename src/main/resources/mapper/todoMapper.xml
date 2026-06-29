@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.TSX_todoApp.mapper.todoMapper">
+
+    <select id="showTodo" resultType="com.example.TSX_todoApp.todo">
+        SELECT * FROM final_todo ORDER BY id
+    </select>
+
+    <select id="filterByStatus" resultType="com.example.TSX_todoApp.todo">
+        SELECT * FROM final_todo WHERE status = #{status}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO final_todo (title, status) 
+        VALUES (#{todo.title}, #{todo.status})
+    </insert>
+
+    <update id="update">
+        UPDATE final_todo
+        SET title = #{todo.title},
+            status = #{todo.status} 
+        WHERE 
+            id = #{todo.id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM final_todo WHERE id = #{id}
+    </delete>
+
+</mapper>
